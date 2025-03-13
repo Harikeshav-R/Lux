@@ -5,6 +5,7 @@ class ModelBase(BaseModel):
     model_name: str
     base_provider: str
     is_provider: bool
+    supports_image_generation: bool
 
 
 class ModelInDBBase(ModelBase):
