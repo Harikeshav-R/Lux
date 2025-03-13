@@ -12,6 +12,6 @@ from lux.server.schemas import LlmModelSchema
 router = APIRouter()
 
 
-@router.get("/", response_model=LlmModelSchema)
+@router.get("/", response_model=list[LlmModelSchema])
 def read_all_models_endpoint(*, db: Session = Depends(get_db)):
     return read_all_models(db)
