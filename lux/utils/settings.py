@@ -7,6 +7,10 @@ from typing import Any, Dict, Optional
 DEFAULT_SETTINGS = {
     "database": {
         "url": "sqlite:///lux.db",
+    },
+    "server": {
+        "host": "localhost",
+        "port": 3105,
     }
 }
 
