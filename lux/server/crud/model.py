@@ -33,11 +33,16 @@ def _populate_models_in_database(db: Session) -> list[LlmModelModel]:
     db.commit()
     db.expire_all()
 
-    return all_models
-
 
 def read_all_models(db: Session) -> list[Model] | list[Type[Model]]:
     if not db.query(LlmModelModel).first():
-        return _populate_models_in_database(db)
+        _populate_models_in_database(db)
 
     return db.query(LlmModelModel).all()
+
+
+def read_model_by_provider(db: Session, provider_name: str) -> list[Model] | list[Type[Model]]:
+    if not db.query(LlmModelModel).first():
+        _populate_models_in_database(db)
+
+    return db.query(LlmModelModel).filter(LlmModelModel.base_provider == provider_name).all()
