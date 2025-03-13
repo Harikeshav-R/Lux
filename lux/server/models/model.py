@@ -10,6 +10,6 @@ class Model(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
 
     model_name: Mapped[str] = mapped_column(String, nullable=False)
-    base_provider: Mapped[str] = mapped_column(String, nullable=False)
+    base_provider: Mapped[str] = mapped_column(String, nullable=True)
     is_provider: Mapped[bool] = mapped_column(Boolean, nullable=False)
     supports_image_generation: Mapped[bool] = mapped_column(Boolean, nullable=False)

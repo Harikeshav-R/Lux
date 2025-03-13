@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 class ModelBase(BaseModel):
     model_name: str
-    base_provider: str
+    base_provider: str | None
     is_provider: bool
     supports_image_generation: bool
 
