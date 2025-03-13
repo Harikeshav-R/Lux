@@ -28,3 +28,10 @@ def populate_models_in_database(db: Session):
     db.add_all(all_models)
     db.commit()
     db.expire_all()
+
+
+def read_all_models(db: Session):
+    if not db.query(LlmModelModel).first():
+        populate_models_in_database(db)
+
+    return db.query(LlmModelModel).all()
