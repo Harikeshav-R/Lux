@@ -36,7 +36,10 @@ class Settings:
         """
 
         if not os.path.exists(self.file_path):
-            return {}
+            with open(self.file_path, 'w', encoding='utf-8') as file:
+                json.dump(DEFAULT_SETTINGS, file, indent=4)
+
+            return DEFAULT_SETTINGS
         try:
             with open(self.file_path, 'r', encoding='utf-8') as file:
                 return json.load(file)
