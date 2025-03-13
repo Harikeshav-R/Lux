@@ -1,5 +1,5 @@
-from lux.server.models.model import Model as LlmModelModel
-from lux.server.schemas.model import Model as LlmModelSchema
+from lux.server.models import LlmModelModel
+from lux.server.schemas import LlmModelSchema
 
 import g4f
 import g4f.models
@@ -8,7 +8,7 @@ import g4f.Provider
 from sqlalchemy.orm import Session
 
 
-def populate_models_in_database(db: Session):
+def _populate_models_in_database(db: Session):
     all_models = [LlmModelModel(
         model_name=model_id,
         base_provider=model.base_provider,
@@ -32,6 +32,6 @@ def populate_models_in_database(db: Session):
 
 def read_all_models(db: Session):
     if not db.query(LlmModelModel).first():
-        populate_models_in_database(db)
+        _populate_models_in_database(db)
 
     return db.query(LlmModelModel).all()
