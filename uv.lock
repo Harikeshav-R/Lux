@@ -424,7 +424,7 @@ wheels = [
 
 [[package]]
 name = "g4f"
-version = "0.4.8.5"
+version = "0.4.8.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -433,9 +433,9 @@ dependencies = [
     { name = "pycryptodome" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/37/19/2f1706a988089d698d3c38e889eca110d03440eab08f0ffaf064076384cc/g4f-0.4.8.5.tar.gz", hash = "sha256:c358124b5cf4a979477716436f0f566f5a18720e7d89d7ff1e5e15c89e0f49c0", size = 1095334 }
+sdist = { url = "https://files.pythonhosted.org/packages/c3/03/75c018dc44a81dd4ecf13200f4c5cdf77484d5dd533c97697c819877bdbc/g4f-0.4.8.6.tar.gz", hash = "sha256:b17ac03511392e96244f3a77d182deb02ce2c4cbeeca9859295a6e1807ed6d40", size = 1095323 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d1/c4/4df7e6c79a07a2ebc47f93c96f96d39d3104e1eb13cc9b7525e00a638f03/g4f-0.4.8.5-py3-none-any.whl", hash = "sha256:b244c70fe880125e3cd939634983fd34ee5b0831f6ab80708622e14404f88130", size = 1195305 },
+    { url = "https://files.pythonhosted.org/packages/92/35/c109de1c2a61c237f4dde6d752ba09a44b0b5fc10926165dc51e40d8937e/g4f-0.4.8.6-py3-none-any.whl", hash = "sha256:815b12142a6daa434aa17c70eb084aeec59d310413694482543af41c4af53b7c", size = 1195267 },
 ]
 
 [package.optional-dependencies]
@@ -548,7 +548,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "g4f", extras = ["all"], specifier = ">=0.4.8.5" },
+    { name = "g4f", extras = ["all"], specifier = ">=0.4.8.6" },
     { name = "sqlalchemy", specifier = ">=2.0.39" },
 ]
 
