@@ -8,6 +8,9 @@ DEFAULT_SETTINGS = {
     "database": {
         "url": "sqlite:///lux.db",
     },
+    "llm": {
+        "default_system_prompt": "You are a helpful assistant.",
+    }
 }
 
 
