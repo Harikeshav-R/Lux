@@ -8,10 +8,6 @@ DEFAULT_SETTINGS = {
     "database": {
         "url": "sqlite:///lux.db",
     },
-    "server": {
-        "host": "localhost",
-        "port": 3105,
-    }
 }
 
 
