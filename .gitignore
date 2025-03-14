@@ -176,3 +176,4 @@ cython_debug/
 # Lux testing files
 lux-settings.json
 lux.db
+har_and_cookies
