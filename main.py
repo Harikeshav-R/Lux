@@ -1,12 +1,18 @@
-import uvicorn
-from lux.server import app
-from lux.utils.settings import settings
+from lux.llm.client import Client
 
 
 def main():
-    host = settings.get("server.host", "localhost")
-    port = settings.get("server.port", 3105)
-    uvicorn.run(app, host=host, port=port)
+    client = Client()
+    client.start_new_conversation()
+
+    while True:
+        user_prompt = input("> ")
+
+        if user_prompt == "exit":
+            break
+
+        result = client.generate_response("gpt-4o", user_prompt)
+        print(result)
 
 
 if __name__ == "__main__":
