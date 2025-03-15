@@ -42,28 +42,35 @@ class Model:
 
 
 class Client:
-    def __init__(self):
-        self.client = G4FClient()
-        self.conversations: list[Conversation] = []
-        self.current_conversation: Conversation | None = None
+    def __init__(self, model_name: str):
+        self.current_model = Model(model_name)
+
+        self._client = G4FClient(
+            provider=RetryProvider(
+                providers=list(self.current_model.providers.values()),
+                shuffle=True,
+            )
+        )
+        self._conversations: list[Conversation] = []
+        self._current_conversation: Conversation | None = None
 
     def start_new_conversation(self, system_prompt: str = settings.get("llm.default_system_prompt")):
-        self.conversations.append(Conversation(system_prompt))
-        self.current_conversation = self.conversations[-1]
+        self._conversations.append(Conversation(system_prompt))
+        self._current_conversation = self._conversations[-1]
 
-    def generate_response(self, model: str, user_message: str, web_search: bool = False) -> str:
-        if self.current_conversation is None:
+    def generate_response(self, user_message: str, web_search: bool = False) -> str:
+        if self._current_conversation is None:
             self.start_new_conversation()
 
-        self.current_conversation.add_user_message(user_message)
+        self._current_conversation.add_user_message(user_message)
 
-        response = self.client.chat.completions.create(
-            model=model,
-            messages=self.current_conversation.get_conversation(),
+        response = self._client.chat.completions.create(
+            model=self.current_model.model_name,
+            messages=self._current_conversation.get_conversation(),
             web_search=web_search
         )
 
         assistant_response = response.choices[0].message.content
-        self.current_conversation.add_assistant_message(assistant_response)
+        self._current_conversation.add_assistant_message(assistant_response)
 
         return assistant_response
