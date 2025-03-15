@@ -62,11 +62,18 @@ class Client:
         self._conversations.append(Conversation(system_prompt))
         self._current_conversation = self._conversations[-1]
 
-    def generate_text_response(self, web_search: bool = False) -> str:
+    def generate_text_response(self, vision_image: Path | None = None, web_search: bool = False) -> str:
+        if vision_image is not None and not self.current_model.vision_model:
+            raise ValueError(
+                f"{self.current_model.model_name} does not support vision! Please use a model that supports vision."
+                f" Available vision models are: "
+                f"{', '.join([model for model in Model.all_models.keys() if Model.all_models[model]["vision"]]).strip(', ')}")
+
         response = self._client.chat.completions.create(
             model=self.current_model.model_name,
             messages=self._current_conversation.get_conversation(),
-            web_search=web_search
+            web_search=web_search,
+            image=open(vision_image, "rb").read() if vision_image is not None else None,
         )
 
         assistant_response = response.choices[0].message.content
@@ -91,7 +98,7 @@ class Client:
 
         return str(file_path)
 
-    def generate_response(self, user_message: str) -> str:
+    def generate_response(self, user_message: str, vision_image: Path | None = None,) -> str:
         if self._current_conversation is None:
             self.start_new_conversation()
 
@@ -101,7 +108,7 @@ class Client:
             assistant_response = self.generate_image_response()
 
         else:
-            assistant_response = self.generate_text_response()
+            assistant_response = self.generate_text_response(vision_image)
 
         self._current_conversation.add_assistant_message(assistant_response)
         return assistant_response
