@@ -10,6 +10,7 @@ DEFAULT_SETTINGS = {
     },
     "llm": {
         "default_system_prompt": "You are a helpful assistant.",
+        "images_location": "images/"
     }
 }
 
