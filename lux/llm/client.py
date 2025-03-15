@@ -1,4 +1,8 @@
+from datetime import datetime
+from pathlib import Path
 from typing import Type
+
+import requests
 
 from g4f import Client as G4FClient
 from g4f import models
@@ -58,12 +62,7 @@ class Client:
         self._conversations.append(Conversation(system_prompt))
         self._current_conversation = self._conversations[-1]
 
-    def generate_response(self, user_message: str, web_search: bool = False) -> str:
-        if self._current_conversation is None:
-            self.start_new_conversation()
-
-        self._current_conversation.add_user_message(user_message)
-
+    def generate_text_response(self, web_search: bool = False) -> str:
         response = self._client.chat.completions.create(
             model=self.current_model.model_name,
             messages=self._current_conversation.get_conversation(),
@@ -71,6 +70,38 @@ class Client:
         )
 
         assistant_response = response.choices[0].message.content
-        self._current_conversation.add_assistant_message(assistant_response)
+        return assistant_response
 
+    def generate_image_response(self) -> str:
+        response = self._client.images.generate(
+            model=self.current_model.model_name,
+            prompt=self._current_conversation.get_conversation()[-1]["content"],
+            response_format="url"
+        )
+
+        image_url = response.data[0].url
+
+        response = requests.get(image_url)
+        _, extension = response.headers["content-type"].split("/")
+        file_name = f"{datetime.now().strftime('%Y%m%d-%H%M%S')}.{extension}"
+        file_path = Path(settings.get("llm.images_location"), file_name)
+
+        with open(file_path, "wb") as f:
+            f.write(response.content)
+
+        return str(file_path)
+
+    def generate_response(self, user_message: str) -> str:
+        if self._current_conversation is None:
+            self.start_new_conversation()
+
+        self._current_conversation.add_user_message(user_message)
+
+        if self.current_model.image_model:
+            assistant_response = self.generate_image_response()
+
+        else:
+            assistant_response = self.generate_text_response()
+
+        self._current_conversation.add_assistant_message(assistant_response)
         return assistant_response
