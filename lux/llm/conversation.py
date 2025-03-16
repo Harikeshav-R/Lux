@@ -10,19 +10,21 @@ class Conversation:
             }
         ]
 
-    def add_user_message(self, message: str) -> None:
+    def add_user_message(self, message: str, image_data: str | None = None) -> None:
         self._history.append(
             {
                 "role": "user",
                 "content": message,
+                "image_data": image_data,
             }
         )
 
-    def add_assistant_message(self, message: str) -> None:
+    def add_assistant_message(self, message: str, image_data: str | None = None) -> None:
         self._history.append(
             {
                 "role": "assistant",
                 "content": message,
+                "image_data": image_data,
             }
         )
 
