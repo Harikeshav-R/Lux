@@ -1,53 +1,21 @@
+import base64
+
 from datetime import datetime
 from pathlib import Path
-from typing import Type
 
 import requests
 
 from g4f import Client as G4FClient
-from g4f import models
 from g4f.Provider import RetryProvider
-from g4f.providers.types import BaseProvider
 
 from lux.llm.conversation import Conversation
+from lux.llm.model import Model, TextModel, ImageModel, VisionModel
 from lux.utils.settings import settings
 
 
-class Model:
-    all_models = \
-        {
-            str(model.name):
-                {
-                    "image": isinstance(model, models.ImageModel),
-                    "vision": isinstance(model, models.VisionModel),
-                    "providers":
-                        [
-                            (getattr(provider, "parent", provider.__name__), provider)
-                            for provider in providers
-                            if provider.working
-                               and not provider.needs_auth
-                               and not getattr(provider, "use_nodriver", False)
-                        ]
-                }
-            for model, providers in models.__models__.values()
-        }
-
-    def __init__(self, model_name: str):
-        if model_name not in self.all_models:
-            raise ValueError(
-                f"'{model_name}' is not a valid model! Available models are: {', '.join(self.all_models.keys()).strip(', ')}")
-
-        self.model_name: str = model_name
-        self.image_model: bool = self.all_models[model_name]["image"]
-        self.vision_model: bool = self.all_models[model_name]["vision"]
-        self.providers: dict[str, Type[BaseProvider]] = {
-            provider_name: provider_class for provider_name, provider_class in self.all_models[model_name]["providers"]
-        }
-
-
 class Client:
-    def __init__(self, model_name: str):
-        self.current_model = Model(model_name)
+    def __init__(self, current_model: Model):
+        self.current_model = current_model
 
         self._client = G4FClient(
             provider=RetryProvider(
@@ -62,53 +30,71 @@ class Client:
         self._conversations.append(Conversation(system_prompt))
         self._current_conversation = self._conversations[-1]
 
-    def generate_text_response(self, vision_image: Path | None = None, web_search: bool = False) -> str:
-        if vision_image is not None and not self.current_model.vision_model:
-            raise ValueError(
-                f"{self.current_model.model_name} does not support vision! Please use a model that supports vision."
-                f" Available vision models are: "
-                f"{', '.join([model for model in Model.all_models.keys() if Model.all_models[model]["vision"]]).strip(', ')}")
+
+class TextClient(Client):
+    def __init__(self, model_name: str):
+        super().__init__(TextModel(model_name))
+
+    def generate_response(self, user_prompt: str, web_search: bool = False) -> None:
+        if self._current_conversation is None:
+            self.start_new_conversation()
+
+        self._current_conversation.add_user_message(user_prompt)
 
         response = self._client.chat.completions.create(
             model=self.current_model.model_name,
             messages=self._current_conversation.get_conversation(),
             web_search=web_search,
-            image=open(vision_image, "rb").read() if vision_image is not None else None,
         )
 
         assistant_response = response.choices[0].message.content
-        return assistant_response
+        self._current_conversation.add_assistant_message(assistant_response)
 
-    def generate_image_response(self) -> str:
-        response = self._client.images.generate(
-            model=self.current_model.model_name,
-            prompt=self._current_conversation.get_conversation()[-1]["content"],
-            response_format="url"
-        )
 
-        image_url = response.data[0].url
+class ImageClient(Client):
+    def __init__(self, model_name: str):
+        super().__init__(ImageModel(model_name))
 
-        response = requests.get(image_url)
-        _, extension = response.headers["content-type"].split("/")
-        file_name = f"{datetime.now().strftime('%Y%m%d-%H%M%S')}.{extension}"
-        file_path = Path(settings.get("llm.images_location"), file_name)
-
-        with open(file_path, "wb") as f:
-            f.write(response.content)
-
-        return str(file_path)
-
-    def generate_response(self, user_message: str, vision_image: Path | None = None,) -> str:
+    def generate_response(self, user_prompt: str) -> None:
         if self._current_conversation is None:
             self.start_new_conversation()
 
-        self._current_conversation.add_user_message(user_message)
+        self._current_conversation.add_user_message(user_prompt)
 
-        if self.current_model.image_model:
-            assistant_response = self.generate_image_response()
+        response = self._client.images.generate(
+            model=self.current_model.model_name,
+            prompt=user_prompt,
+            response_format="b64_json"
+        )
+
+        generated_image = response.data[0].b64_json
+        self._current_conversation.add_assistant_message("", generated_image)
+
+
+class VisionClient(Client):
+    def __init__(self, model_name: str):
+        super().__init__(VisionModel(model_name))
+
+    def generate_response(self, user_prompt: str, image_path: Path | None = None, web_search: bool = False) -> None:
+        if self._current_conversation is None:
+            self.start_new_conversation()
+
+        if image_path is None:
+            image_data = None
 
         else:
-            assistant_response = self.generate_text_response(vision_image)
+            with open(image_path, "rb") as f:
+                image_data = f.read()
 
+        self._current_conversation.add_user_message(user_prompt, base64.b64encode(image_data).decode(
+            "utf-8") if image_data else None)
+
+        response = self._client.chat.completions.create(
+            model=self.current_model.model_name,
+            messages=self._current_conversation.get_conversation(),
+            web_search=web_search,
+            image=image_data
+        )
+
+        assistant_response = response.choices[0].message.content
         self._current_conversation.add_assistant_message(assistant_response)
-        return assistant_response
